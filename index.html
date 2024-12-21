@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -62,19 +63,33 @@
         }
 
         .result-item {
+            padding: 16px;
             margin: 10px 0;
+            border: 1px solid #fffdf6;
+            border-radius: 8px;
+            background-color: #ece8d9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .result-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .result-item a {
             text-decoration: none;
             color: #0066cc;
+            font-weight: bold;
         }
+
 
         .error {
             color: red;
         }
     </style>
 </head>
+
 <body>
     <div class="search__container">
         <p class="search__title">Let's beat GOOGLE!</p>
@@ -86,16 +101,16 @@
 
     <script>
         // Search form submission
-        document.getElementById('search-form').addEventListener('submit', function(event) {
+        document.getElementById('search-form').addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent default form submission
             var keyword = document.getElementById('keyword').value;
 
             fetch('http://localhost:8080/api/search?keyword=' + encodeURIComponent(keyword))
-                .then(function(response) {
+                .then(function (response) {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();
                 })
-                .then(function(data) {
+                .then(function (data) {
                     var resultsHtml = "<h2>Search Results:</h2>";
                     if (Object.keys(data).length === 0) {
                         resultsHtml += "<p>No results found.</p>";
@@ -109,11 +124,12 @@
                     }
                     document.getElementById('results').innerHTML = resultsHtml;
                 })
-                .catch(function(error) {
+                .catch(function (error) {
                     document.getElementById('results').innerHTML = '<p class="error">Error fetching results. Please try again.</p>';
                     console.error('Error:', error);
                 });
         });
     </script>
 </body>
+
 </html>
