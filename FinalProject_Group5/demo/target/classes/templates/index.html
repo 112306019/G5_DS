@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GovItUp</title>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:400,700,900" rel="stylesheet">
+    <style>
+        /* Base styling */
+        body {
+            width: 430px;
+            margin: 0 auto;
+            background-color: #faf6e9;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .search__container {
+            padding-top: 64px;
+        }
+
+        .search__title {
+            font-size: 40px;
+            font-weight: 900;
+            text-align: center;
+            color: #575151;
+        }
+
+        .search__input {
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 14px;
+            line-height: 18px;
+            color: #575756;
+            background-color: transparent;
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: 18px 18px;
+            background-position: 95% center;
+            border-radius: 50px;
+            border: 1px solid #575756;
+            transition: all 250ms ease-in-out;
+            outline: none;
+        }
+
+        .search__input::placeholder {
+            color: rgba(87, 87, 86, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .search__input:hover,
+        .search__input:focus {
+            padding: 12px 0;
+            border: 1px solid transparent;
+            border-bottom: 1px solid #575756;
+            border-radius: 0;
+            background-position: 100% center;
+        }
+
+        .results,
+        .related-keywords {
+            display: none; /* Hide initially */
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            padding: 16px;
+            margin: 10px 0;
+            border: 1px solid #fffdf6;
+            border-radius: 8px;
+            background-color: #ece8d9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .result-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-item a {
+            text-decoration: none;
+            color: #0066cc;
+            font-weight: bold;
+        }
+
+        .related-keywords {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ece8d9;
+            border-radius: 8px;
+            background-color: #ece8d9;
+        }
+
+        .related-keywords h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #575151;
+        }
+
+        .related-keywords ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .related-keywords li {
+            font-size: 14px;
+            color: #0066cc;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+
+        .related-keywords li:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: red;
+        }
+
+        /* Loader styling */
+        .loader {
+            width: 120px;
+            height: 22px;
+            border-radius: 20px;
+            color: #575151;
+            border: 2px solid;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .loader::before {
+            content: "";
+            position: absolute;
+            margin: 2px;
+            inset: 0 100% 0 0;
+            border-radius: inherit;
+            background: currentColor;
+            animation: l6 2s infinite;
+        }
+
+        @keyframes l6 {
+            100% {
+                inset: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="search__container">
+        <p class="search__title">GovItUp</p>
+        <form id="search-form">
+            <input id="keyword" class="search__input" type="text" placeholder="Search">
+        </form>
+    </div>
+
+    <div id="searching" style="display: none; text-align: center; margin-top: 20px; font-size: 18px; color: #575151;">
+        <div class="loader"></div>
+        <p>Searching...</p>
+    </div>
+
+    <div id="results" class="results"></div>
+    <div id="related-keywords" class="related-keywords"></div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+            var keyword = document.getElementById('keyword').value;
+
+            // Show the "Searching..." message
+            document.getElementById('searching').style.display = 'block';
+
+            fetch('http://localhost:8080/api/search?keyword=' + encodeURIComponent(keyword))
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.log("API Response:", data); // Debugging to check the response
+
+                    // Hide the "Searching..." message
+                    document.getElementById('searching').style.display = 'none';
+
+                    // Render search results
+                    var resultsHtml = "<h2>Search Results:</h2>";
+                    if (!data.results || Object.keys(data.results).length === 0) {
+                        resultsHtml += "<p>No results found.</p>";
+                    } else {
+                        for (var title in data.results) {
+                            if (data.results.hasOwnProperty(title)) {
+                                var url = data.results[title];
+                                resultsHtml += '<div class="result-item"><a href="' + url + '" target="_blank">' + title + '</a></div>';
+                            }
+                        }
+                    }
+                    document.getElementById('results').innerHTML = resultsHtml;
+                    document.getElementById('results').style.display = 'block'; // Show results
+
+                    // Render related keywords
+                    var relatedKeywordsHtml = "<h3>Related Keywords:</h3>";
+                    if (data.relatedKeywords && data.relatedKeywords.length > 0) {
+                        relatedKeywordsHtml += '<ul>';
+                        data.relatedKeywords.forEach(function (relatedKeyword) {
+                            relatedKeywordsHtml += `<li class="related-keyword">${relatedKeyword}</li>`;
+                        });
+                        relatedKeywordsHtml += '</ul>';
+                    } else {
+                        relatedKeywordsHtml += "<p>No related keywords found.</p>";
+                    }
+                    document.getElementById('related-keywords').innerHTML = relatedKeywordsHtml;
+                    document.getElementById('related-keywords').style.display = 'block'; // Show related keywords
+
+                    // Add event listeners to related keywords
+                    document.querySelectorAll('.related-keyword').forEach(function (element) {
+                        element.addEventListener('click', function () {
+                            var newKeyword = this.innerText;
+                            document.getElementById('keyword').value = newKeyword;
+                            document.getElementById('search-form').dispatchEvent(new Event('submit'));
+                        });
+                    });
+                })
+                .catch(function (error) {
+                    console.error("Error fetching results:", error); // Debugging
+                    document.getElementById('searching').style.display = 'none';
+                    document.getElementById('results').innerHTML = '<p class="error">Error fetching results. Please try again.</p>';
+                    document.getElementById('results').style.display = 'block'; // Show error
+                });
+        });
+    </script>
+</body>
+
+</html>
